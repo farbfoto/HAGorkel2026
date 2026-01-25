@@ -183,7 +183,7 @@ sensor:
     round: 2
 
   - platform: unifigateway
-    host: 
+    host: 192.168.1.1
     version: UDMP-unifiOS
     verify_ssl: false
     username: !secret unifi_user
