@@ -186,8 +186,8 @@ sensor:
     host: 
     version: UDMP-unifiOS
     verify_ssl: false
-    username: !secrets unifi_user
-    password: !secrets unifi_pw
+    username: !secret unifi_user
+    password: !secret unifi_pw
     monitored_conditions:
       - www
       - wlan
@@ -461,7 +461,7 @@ knx:
 
 # IFTTT
 ifttt:
-  key: !secrets ifttt_key
+  key: !secret ifttt_key
 
 # Binary sensor
 binary_sensor:
