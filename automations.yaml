@@ -139,10 +139,6 @@
     data: {}
     target:
       entity_id: switch.homeofficexnsp_relay_1
-  - type: turn_off
-    device_id: 8d2d6152957c34948526a8c129397c4e
-    entity_id: e556661db36a11956857706c3c4b57c5
-    domain: light
   - action: light.turn_off
     metadata: {}
     data: {}
@@ -151,23 +147,6 @@
       - technik
       - atelier
       - garten
-  mode: single
-- id: '1633291599491'
-  alias: 'Homeoffice: Licht aus nach Bewegung'
-  description: ''
-  triggers:
-  - type: not_present
-    device_id: 204ac042566eeceb029902f6a2ccebc2
-    entity_id: f53125dc9afff2871505bf21fcf18165
-    domain: binary_sensor
-    trigger: device
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-  conditions: []
-  actions:
-  - scene: scene.homoffice_licht_aus
   mode: single
 - id: '1633928564879'
   alias: 'Wohnzimmer Flur: Shelly Eingangstür nach 10m ausschalten'
@@ -253,17 +232,17 @@
 - id: '1634030896058'
   alias: 'Zone: Ben verlässt Schule'
   description: ''
-  trigger:
-  - platform: zone
-    entity_id: person.ben_kirschniak
+  triggers:
+  - entity_id: person.ben_kirschniak
     zone: zone.karls_gymnasium
     event: leave
-  condition: []
-  action:
-  - device_id: 826634dc91493dca3edae76f43abe5c5
-    domain: mobile_app
-    type: notify
-    message: Ben verlässt KG
+    trigger: zone
+  conditions: []
+  actions:
+  - action: notify.mobile_app_iphone
+    metadata: {}
+    data:
+      message: Ben verlässt die Schule
   mode: single
 - id: '1634387924549'
   alias: 'Homeoffice Lichtschalter: Aus'
@@ -322,16 +301,15 @@
     action: cover.open_cover
   mode: single
 - id: '1636124026140'
-  alias: Küche verdunkeln bei Sonnenuntergang
+  alias: Haus Extern Verdunkelung bei Sonnenuntergang
   description: ''
-  trigger:
-  - platform: sun
-    event: sunset
+  triggers:
+  - event: sunset
     offset: 00:35:00
-  condition: []
-  action:
-  - service: cover.close_cover
-    target:
+    trigger: sun
+  conditions: []
+  actions:
+  - target:
       entity_id:
       - cover.kuche_rechts
       - cover.kuche_links
@@ -339,6 +317,8 @@
       - cover.schlafzimmer_shutter
       - cover.media_shutter
       - cover.atelier_shutter
+    action: cover.close_cover
+    data: {}
   mode: single
 - id: '1636124072180'
   alias: Küche hell bei Sonnenaufgang
@@ -533,26 +513,6 @@
       transition: 5
     action: light.turn_off
   mode: single
-- id: '1641475768841'
-  alias: Media Licht aus wenn keine Bewegung
-  description: ''
-  trigger:
-  - type: not_occupied
-    platform: device
-    device_id: 2214f2e7adbb2875469528b60558157f
-    entity_id: c73038c261bea42334fea5c981141777
-    domain: binary_sensor
-    for:
-      hours: 0
-      minutes: 30
-      seconds: 0
-  condition: []
-  action:
-  - service: light.turn_off
-    target:
-      area_id: media
-    data: {}
-  mode: single
 - id: '1642400614272'
   alias: 'UG: Lichter in Jungs-Zimmer aus um 7:30'
   description: ''
@@ -600,29 +560,6 @@
       value: '{{states.sensor.gw2000a_daily_rain_rate_piezo}}'
     service: input_number.set_value
   mode: single
-- id: '1650817824360'
-  alias: Balkon - Leucht Ei an bei Sonnenuntergang
-  description: ''
-  trigger:
-  - platform: sun
-    event: sunset
-    offset: 00:35:00
-  condition: []
-  action:
-  - type: turn_on
-    device_id: c214a6855397b34f01cd17ad87e5a35a
-    entity_id: switch.balkon_outlet_2
-    domain: switch
-  - delay:
-      hours: 1
-      minutes: 45
-      seconds: 0
-      milliseconds: 0
-  - type: turn_off
-    device_id: c214a6855397b34f01cd17ad87e5a35a
-    entity_id: light.balkon_leucht_ei
-    domain: light
-  mode: single
 - id: '1650818164259'
   alias: Wohnzimmer TV an Licht ändern
   description: ''
@@ -640,66 +577,6 @@
     action: scene.turn_on
     target:
       entity_id: scene.wohnzimmer_fernsehen_2
-  mode: single
-- id: '1650819080623'
-  alias: UG Roomba unten fährt - Licht an Flur
-  description: ''
-  trigger:
-  - platform: device
-    device_id: 9ac9b7a5a4961645d231b826d688e658
-    domain: vacuum
-    entity_id: vacuum.roomba
-    type: cleaning
-  condition: []
-  action:
-  - service: light.turn_on
-    data: {}
-    target:
-      area_id: flur
-  - type: turn_on
-    device_id: 9b2812db5585cb5ca109502fe7c7590b
-    entity_id: switch.shelly_flur_unten
-    domain: switch
-  mode: single
-- id: '1650819393226'
-  alias: 'UG: Roomba Bin voll'
-  description: ''
-  trigger:
-  - type: turned_on
-    platform: device
-    device_id: 9ac9b7a5a4961645d231b826d688e658
-    entity_id: binary_sensor.roomba_bin_full
-    domain: binary_sensor
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-  condition: []
-  action:
-  - service: notify.mobile_app_ck_12_pro_max
-    data:
-      message: Roomba unten muss gereinigt werden
-  mode: single
-- id: '1651305559757'
-  alias: 'Homeoffice: Ikea Luftreinigung Büro aus unter 15'
-  description: ''
-  triggers:
-  - type: value
-    device_id: 07c73b605566c78f1396a42cb9184dfa
-    entity_id: a9019284e0346b0c8a8463933fb84377
-    domain: sensor
-    trigger: device
-    below: 15
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
-  conditions: []
-  actions:
-  - type: turn_off
-    device_id: 48a2ad0b66d44ca7e03cf12c45ae62a9
-    entity_id: b2f74b307c7b4db87c7e55f8bc2883d6
-    domain: switch
   mode: single
 - id: '1651305767651'
   alias: 'Homeoffice: Ikea Luftreinigung Büro an über 20'
@@ -771,61 +648,53 @@
 - id: '1652513364136'
   alias: Schlafzimer Klima Steuerung Abends
   description: ''
-  trigger:
-  - platform: sun
-    event: sunset
+  triggers:
+  - event: sunset
     offset: 0
-  condition:
+    trigger: sun
+  conditions:
   - condition: numeric_state
-    entity_id: sensor.klimaanlage_temperature
-    above: '23'
-  action:
-  - service: climate.turn_on
-    data: {}
-    target:
-      device_id: 42404105d1e41e26ef2e5c3391f5e2a4
-  - service: climate.set_temperature
+    entity_id: sensor.schlafzimmer_temp_temperature
+    above: 24
+  actions:
+  - action: climate.set_temperature
+    metadata: {}
     data:
-      temperature: 20
+      temperature: 23
       hvac_mode: cool
     target:
-      device_id: 42404105d1e41e26ef2e5c3391f5e2a4
+      entity_id: climate.schlafzimmer_ac_direct_klimaanlage_mqtt_hvac
   mode: single
 - id: '1652544981081'
   alias: Schlafzimer Klima Steuerung Abends ausschalten
   description: ''
-  trigger:
-  - platform: sun
-    event: sunrise
+  triggers:
+  - event: sunrise
     offset: 0
-  condition: []
-  action:
-  - service: climate.turn_off
-    data: {}
+    trigger: sun
+  conditions: []
+  actions:
+  - data: {}
+    action: climate.turn_off
     target:
-      device_id: 42404105d1e41e26ef2e5c3391f5e2a4
+      device_id: aae12036b0ec43ae76f09680a724e375
   mode: single
 - id: '1654377635434'
   alias: 'Schlafzimmer: Deckenvent an 33%'
   description: ''
-  trigger:
-  - device_id: def19bbe1a34bfde9c5d07774d660156
-    domain: zha
-    platform: device
-    type: remote_button_short_press
-    subtype: turn_on
-  condition: []
-  action:
+  triggers: []
+  conditions: []
+  actions:
   - type: toggle
     device_id: b3cb33375631c72648582bb635a000a6
     entity_id: fan.bedroom_fan
     domain: fan
-  - service: fan.set_percentage
-    data:
+  - data:
       percentage: 33
     target:
       device_id: b3cb33375631c72648582bb635a000a6
     enabled: false
+    action: fan.set_percentage
   - delay:
       hours: 1
       minutes: 0
@@ -841,9 +710,10 @@
   alias: Wohnzimmer Luftverbesserung >10 an
   description: ''
   triggers:
-  - entity_id: sensor.zhimi_mb5_930d_pm25_density
+  - entity_id:
+    - sensor.zhimi_mb5_930d_pm25_density_2
     attribute: environment.pm2_5_density
-    above: '9'
+    above: 6
     trigger: numeric_state
   conditions:
   - type: is_not_open
@@ -853,8 +723,8 @@
     domain: binary_sensor
   actions:
   - type: turn_on
-    device_id: c78cbb2ec5c00261e6ab4ef1ea06ea35
-    entity_id: fan.zhimi_mb5_930d_air_purifier
+    device_id: 18fce658972ff87e29591fecfb90e051
+    entity_id: c5d2a0420bb0c64530e09f68fa832082
     domain: fan
   mode: single
 - id: '1654446150129'
@@ -873,8 +743,8 @@
   conditions: []
   actions:
   - type: turn_off
-    device_id: c78cbb2ec5c00261e6ab4ef1ea06ea35
-    entity_id: fan.zhimi_mb5_930d_air_purifier
+    device_id: 18fce658972ff87e29591fecfb90e051
+    entity_id: c5d2a0420bb0c64530e09f68fa832082
     domain: fan
   mode: single
 - id: '1654446211565'
@@ -941,8 +811,9 @@
   - data:
       message: Wasserleck Küche Quocker
     action: notify.persistent_notification
-  - action: notify.mobile_app_iphone_ck_biz_15
-    data: {}
+  - action: notify.mobile_app_iphone
+    data:
+      message: Wasserleck Küche unter Waschbecken
   mode: single
 - id: '1659020749295'
   alias: 'Technik: Wasserleck '
@@ -968,7 +839,7 @@
   alias: Homeoffice Licht aus nach 5m
   description: ''
   triggers:
-  - type: not_present
+  - type: not_occupied
     device_id: 204ac042566eeceb029902f6a2ccebc2
     entity_id: f53125dc9afff2871505bf21fcf18165
     domain: binary_sensor
@@ -992,44 +863,20 @@
 - id: '1665302863604'
   alias: Kompressor ausschalten
   description: Turn off the compressor's smart switches at 19:00 every day.
-  trigger:
-  - platform: time
-    at: '19:00:00'
-  condition:
-  action:
-  - service: switch.turn_off
-    target:
+  triggers:
+  - at: '19:00:00'
+    trigger: time
+  conditions:
+  actions:
+  - target:
       entity_id:
-      - switch.smart_switch_2009143824788390830448e1e933a3fd_outlet
-      - switch.smart_switch_2009143824788390830448e1e933a3fd_outlet_2
-  - service: notify.notify
-    data:
+      - switch.garage_smart_switch_2_outlets_outlet
+      - switch.garage_smart_switch_2_outlets_outlet_3
+    action: switch.turn_off
+    data: {}
+  - data:
       message: Kompressor switches turned off at 19:00.
-  mode: single
-- id: '1668241094438'
-  alias: 'Homeoffice: Dattelpalme giessen'
-  description: ''
-  trigger:
-  - type: value
-    platform: device
-    device_id: 6de98e446cccea12213afb163bafd439
-    entity_id: sensor.flower_care_dattelpalme_moisture
-    domain: sensor
-    below: 8
-    for:
-      hours: 1
-      minutes: 0
-      seconds: 0
-  condition: []
-  action:
-  - service: tts.cloud_say
-    data:
-      entity_id: media_player.homeoffice
-      message: Bitte die Dattelpalme giessen
-  - service: notify.mobile_app_iphone_ck_biz_15
-    data:
-      message: Palme giessen im Homeoffice
-      title: Dattelpalme giessen
+    action: notify.notify
   mode: single
 - id: '1670066787711'
   alias: Schlafzimmer Nachtlicht rot
@@ -1089,58 +936,6 @@
     domain: light
     enabled: false
   mode: single
-- id: '1672734411562'
-  alias: 'NFC Tag Garage öffnen '
-  description: ''
-  trigger:
-  - platform: tag
-    tag_id: 19bb40f7-a149-4986-baff-ebad15209d11
-  condition: []
-  action:
-  - device_id: 7ea0e5c095ec50705f1bc64092ff6d6d
-    domain: cover
-    entity_id: cover.garagentor_garage
-    type: open
-  mode: single
-- id: '1674408186802'
-  alias: 'NFC Tag Saunalicht '
-  description: ''
-  trigger:
-  - platform: tag
-    tag_id: 575452a7-fc01-474c-91a0-fdd333bc5e5d
-  condition: []
-  action:
-  - service: scene.turn_on
-    target:
-      entity_id: scene.saunaabend
-    metadata: {}
-  mode: single
-- id: '1674408598361'
-  alias: NFC Tag Ankleide weiss ist gescannt
-  description: ''
-  trigger:
-  - platform: tag
-    tag_id: 47112dd5-2987-43cf-8d96-083795c07a22
-  condition: []
-  action:
-  - service: scene.turn_on
-    target:
-      entity_id: scene.ankleide_und_bad_weiss
-    metadata: {}
-  mode: single
-- id: '1683003075111'
-  alias: NFC Tag Ankleide weiss ist gescannt
-  description: ''
-  trigger:
-  - platform: tag
-    tag_id: 47112dd5-2987-43cf-8d96-083795c07a22
-  condition: []
-  action:
-  - service: scene.turn_on
-    target:
-      entity_id: scene.ankleide_und_bad_weiss
-    metadata: {}
-  mode: single
 - id: '1691928563469'
   alias: Homeoffice NSP Auto 1
   description: ''
@@ -1149,7 +944,7 @@
     input:
       nspanel_name: c69a5b6d5b60a79f69b3e096904e00c6
       language: de
-      weather_entity: weather.gorkelhome
+      weather_entity: weather.forecast_home
       outdoortemp: sensor.gw2000a_outdoor_temperature
       indoortemp: sensor.wohnzimmer_temp_sensor_temperature
       chip01: switch.printer
@@ -1186,7 +981,6 @@
       qrcode_label: Wifi
       qrcode_value: WIFI:S:Gorkel.guest;T:WPA;P:hollythehound;;
       home_value01: sensor.xiaomi_temp_sensor_homeoffice_luftfeuchtigkeit
-      home_value02: sensor.ikea_vindriktning_pm25
       left_button_hold_custom_action: []
       left_button_hold_select: Default
       climate: climate.wohnzimmer_tado
@@ -1195,9 +989,7 @@
       entity18: light.schreibtisch_rechts
       entity19: light.homeoffice_osram_surface_decke_light
       entity19_name: Decke
-      home_custom_button01: scene.homeoffice_evening_work
-      home_custom_button01_icon: mdi:lightbulb-night
-      alarm: alarm_control_panel.blink_ckblink
+      home_custom_button01_icon: ''
       chip_font_size: '8'
       entity01_icon_color:
       - 250
@@ -1227,7 +1019,7 @@
       relay_1_local_fallback: true
       left_button_entity: light.homeofficexnsp_relay_1
       home_outdoor_temp_font: '3'
-      button_pages_icon_size: '8'
+      button_pages_icon_size: '7'
       entity02: scene.wohnzimmer_indirekt
       entity02_name: Indirekt
       entity02_icon_color:
@@ -1258,6 +1050,11 @@
       - 0
       entity09_icon: mdi:robot-vacuum
       entity09_confirm: true
+      entity08_confirm: false
+      custom_buttons_font_size: '7'
+      home_custom_button04_icon: ''
+      right_button_entity: light.smart_christmas_light_cct
+      right_button_name: Christmas
 - id: '1691937518733'
   alias: Schlafzimmer NSPANEL
   description: ''
@@ -1266,7 +1063,7 @@
     input:
       nspanel_name: dd3bf73faae80a8c86d85b04a472394e
       language: de
-      weather_entity: weather.gorkelhome
+      weather_entity: weather.forecast_home
       indoortemp: sensor.nspanel_temperature
       climate: climate.schlafzimmer_ac_direct_klimaanlage_mqtt_hvac
       left_button_entity: light.schlafzimmer_bett_led
@@ -1304,6 +1101,11 @@
       - 112
       - 0
       entity01_icon: mdi:led-strip-variant
+      entity05_icon_color:
+      - 0
+      - 250
+      - 142
+      chip01: cover.schlafzimmer_shutter
 - id: '1691941368272'
   alias: Bad NSPANEL
   description: ''
@@ -1311,7 +1113,7 @@
     path: Blackymas/nspanel_blueprint.yaml
     input:
       language: de
-      weather_entity: weather.gorkelhome
+      weather_entity: weather.forecast_home
       outdoortemp: sensor.netatmo_gorkel_weather_innen_aussen_temperature
       indoortemp: sensor.aqara_temp_sensor_t2_temperature
       climate: climate.schlafzimmer_ac_direct_klimaanlage_mqtt_hvac
@@ -1340,7 +1142,7 @@
       - 0
       - 250
       - 187
-      home_outdoor_temp_font: '3'
+      home_outdoor_temp_font: '2'
       home_value01: sensor.xiaomi_temp_sensor_schlafzimmer_temperatur
       home_value01_icon_color:
       - 218
@@ -1365,7 +1167,7 @@
       - 209
       - 157
       - 1
-      button_pages_icon_size: '10'
+      button_pages_icon_size: '8'
       entity05: scene.schlafzimmer_sauna
       entity05_name: Sauna
       entity05_icon_color:
@@ -1387,17 +1189,23 @@
       - action: script.schlafzimmer_bett_licht_zeitabhangig
         metadata: {}
         data: {}
-- id: '1691942711258'
-  alias: Low battery level detection & notification for all battery sensors
-  description: ''
-  use_blueprint:
-    path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
-    input:
-      actions:
-      - device_id: 826634dc91493dca3edae76f43abe5c5
-        domain: mobile_app
-        type: notify
-        message: Batterie Ersetzen...
+      decimal_separator: ','
+      entity01_icon: mdi:window-shutter
+      entity01_icon_color:
+      - 250
+      - 158
+      - 0
+      home_value01_icon: ''
+      home_value03: sensor.bad_sensor_temperatur_sauna_temperature
+      home_value03_icon: kuf:scene_sauna
+      home_value03_icon_color:
+      - 251
+      - 9
+      - 33
+      home_value03_label_color:
+      - 250
+      - 0
+      - 0
 - id: '1692431999822'
   alias: 'Media: Hue Dimmer Schalter Licht an'
   description: ''
@@ -1735,93 +1543,6 @@
     data:
       event: rasenwasseraus
   mode: restart
-- id: '1699171346623'
-  alias: 'Media: Heimtheater nach 18h ausschalten'
-  description: ''
-  trigger:
-  - platform: device
-    type: turned_off
-    device_id: 556aa68586aa64b10f5bd1e26ae7c716
-    entity_id: 5b444033cb7f8fe3e7da6e165f4fa7a6
-    domain: switch
-  condition: []
-  action:
-  - delay:
-      hours: 18
-      minutes: 0
-      seconds: 0
-      milliseconds: 0
-  - service: switch.turn_off
-    data: {}
-    target:
-      device_id: 556aa68586aa64b10f5bd1e26ae7c716
-  mode: single
-- id: '1699689187567'
-  alias: 'Clock: Test Scren Elements'
-  description: ''
-  use_blueprint:
-    path: ehmtxv2/EHMTX_easy_show.yaml
-    input:
-      ehmtx_device: 2f20668a2846438eb918290f863f7d0f
-      trigger_sensor: sensor.hue_motion_sensor_1_temperature_2
-      element: show_gauge
-      element_color:
-      - 44
-      - 40
-      - 240
-- id: '1699721896247'
-  alias: 'ehmtxv2: delete screen from 8x32 RGB-matrix'
-  description: ''
-  use_blueprint:
-    path: ehmtxv2/EHMTX_easy_delete.yaml
-    input:
-      ehmtx_device: 8824ec2eead09b7b119ea3dc09532f2b
-      trigger_sensor: sensor.hue_motion_sensor_homeoffice_beleuchtungsstarke
-- id: '1699721942095'
-  alias: 'ehmtxv2: Show screen elements on 8x32 RGB-matrix'
-  description: Ulanzi Licht anzeige
-  use_blueprint:
-    path: ehmtxv2/EHMTX_easy_show.yaml
-    input:
-      ehmtx_device: 8824ec2eead09b7b119ea3dc09532f2b
-      trigger_sensor: sensor.xiaomi_lumi_sen_ill_mgl01_illuminance_2
-      element: show_gauge
-- id: '1699722078977'
-  alias: Ulanzi show temp
-  description: ''
-  use_blueprint:
-    path: ehmtxv2/EHMTX_easy_state.yaml
-    input:
-      ehmtx_device: 2f20668a2846438eb918290f863f7d0f
-      trigger_sensor:
-      - sensor.wohnzimmer_tado_current_temperature
-      lifetime: 2
-      default_color:
-      - 45
-      - 61
-      - 139
-      icon_name: temperature
-      use_friendly: true
-      low_value: 21
-      high_value: 23
-- id: '1699798009420'
-  alias: Ulanzi Sauna Humidity
-  description: ''
-  use_blueprint:
-    path: ehmtxv2/EHMTX_extended_state.yaml
-    input:
-      ehmtx_device: 8824ec2eead09b7b119ea3dc09532f2b
-      trigger_sensor:
-      - sensor.sauna2_sauna_luftfeuchtigkeit
-      icon_text: true
-      default_color:
-      - 39
-      - 36
-      - 235
-      icon_name: saunahumidity
-      use_friendly: false
-      default_font: true
-      darkpoet78_replace: true
 - id: '1700921476843'
   alias: Ben Rauch Detektiert
   description: ''
@@ -1833,13 +1554,16 @@
     trigger: device
   conditions: []
   actions:
-  - data:
-      message: Rauch in Ben's Zimmer
-    action: notify.alexa_media_uberall
   - metadata: {}
     data:
       message: Rauch in Ben's Zimmer
     action: notify.persistent_notification
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: 'ALARM: Rauchmelder in Ben''s Zimmer'
+    target:
+      device_id: 9aa05a31de5830b349072fe54806f32a
   mode: single
 - id: '1701242231892'
   alias: Schlafzimmer Klimaanlage nach Trocknen ausschalten (90m)
@@ -1953,13 +1677,9 @@
   - metadata: {}
     data:
       brightness: 180
-      kelvin: 2396
+      kelvin: 2800
     target:
-      device_id:
-      - bf4250da086ce5ce773e65c7813c0ed8
-      - 8fdde933d1ba53ffaf7a3a8b5d7c47f4
-      - 92bfc41fa0a8132b98a7b0591a0bba22
-      - 8193e639db6cc0608fbc3253a58f14bb
+      entity_id: light.homeoffice
     action: light.turn_on
   mode: single
 - id: '1708938112554'
@@ -1971,7 +1691,7 @@
   conditions:
   - condition: numeric_state
     entity_id: sensor.gw2000a_outdoor_temperature
-    above: 10
+    above: 12
   actions:
   - metadata: {}
     data: {}
@@ -2351,60 +2071,6 @@
     entity_id: feb3a7c40b566e71102de488ab98c3ab
     type: lock
   mode: single
-- id: '1725028968809'
-  alias: 'Homeoffice: Recoding starts when Christian Kirschniak leaves Home'
-  description: ''
-  trigger:
-  - platform: zone
-    entity_id: person.christian_kirschniak
-    zone: zone.home
-    event: leave
-  condition: []
-  action:
-  - type: turn_on
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: a85e5ec0436fdba0910f02b5eca475c6
-    domain: switch
-  - type: turn_on
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: fcea5cce467c3f6df9563b0f63162cf2
-    domain: switch
-  - type: turn_on
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: fccd02bd01fe0fb366cf8d035bec3655
-    domain: switch
-  - type: turn_on
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: 25a8a1f227ec9c1db5f04afd01482cc4
-    domain: switch
-  mode: single
-- id: '1725029169566'
-  alias: 'Homeoffice: Camera stop recording if Christian Kirschniak enters home'
-  description: ''
-  trigger:
-  - platform: zone
-    entity_id: person.christian_kirschniak
-    zone: zone.home
-    event: enter
-  condition: []
-  action:
-  - type: turn_off
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: a85e5ec0436fdba0910f02b5eca475c6
-    domain: switch
-  - type: turn_off
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: 25a8a1f227ec9c1db5f04afd01482cc4
-    domain: switch
-  - type: turn_off
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: fcea5cce467c3f6df9563b0f63162cf2
-    domain: switch
-  - type: turn_off
-    device_id: 86dc51ba5b1b9e10727e0600dee1af92
-    entity_id: fccd02bd01fe0fb366cf8d035bec3655
-    domain: switch
-  mode: single
 - id: '1725117962451'
   alias: Christian Kirschniak Home Notification
   description: ''
@@ -2458,6 +2124,17 @@
           brightness_pct: 75
         target:
           device_id: b55472d88be5835e25dc46e3a9a200e1
+  - if:
+    - condition: state
+      entity_id: cover.toilette_eg_shutter
+      state: closed
+    then:
+    - action: light.turn_on
+      metadata: {}
+      data:
+        brightness_pct: 35
+      target:
+        device_id: b55472d88be5835e25dc46e3a9a200e1
   mode: single
 - id: '1726408611719'
   alias: 'Toilette EG: Anwesenheit Licht aus'
@@ -2531,9 +2208,8 @@
 - id: '1727014067710'
   alias: 'Garten: Mower: Luba gleich fertig'
   description: ''
-  trigger:
+  triggers:
   - type: value
-    platform: device
     device_id: da7c6ce21de05f7a8125fa31226cbdc1
     entity_id: a78841b687d13e3a95e314a13c34067b
     domain: sensor
@@ -2542,20 +2218,20 @@
       hours: 0
       minutes: 1
       seconds: 0
-  condition: []
-  action:
-  - action: notify.notify
-    metadata: {}
-    data:
-      message: Luba ist gleich fertig
-      title: Luba
+    trigger: device
+  conditions: []
+  actions:
+  - device_id: f744058481d56d356770555151af1d4f
+    domain: mobile_app
+    type: notify
+    message: Luba ist gleich fertig
+    title: Luba ist gleich fertig
   mode: single
 - id: '1727014469379'
   alias: 'Mower: Fertig mit Mähen - iPHone 15'
   description: ''
-  trigger:
+  triggers:
   - type: value
-    platform: device
     device_id: da7c6ce21de05f7a8125fa31226cbdc1
     entity_id: a78841b687d13e3a95e314a13c34067b
     domain: sensor
@@ -2564,12 +2240,15 @@
       hours: 0
       minutes: 0
       seconds: 20
-  condition: []
-  action:
-  - device_id: 826634dc91493dca3edae76f43abe5c5
-    domain: mobile_app
-    type: notify
-    message: Fertig mit Mähen
+    trigger: device
+  conditions: []
+  actions:
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: Luba hat das Mähen beendet
+    target:
+      device_id: 9aa05a31de5830b349072fe54806f32a
   mode: single
 - id: '1728230861328'
   alias: 'Garten: Wasserstand: Teich unter 75 Nachricht'
@@ -2581,10 +2260,11 @@
     below: 750
   conditions: []
   actions:
-  - action: notify.mobile_app_iphone_ck_biz_15
-    metadata: {}
-    data:
-      message: Wasserstand Teich unter 75cm
+  - device_id: f744058481d56d356770555151af1d4f
+    domain: mobile_app
+    type: notify
+    message: Wasserstand Teich unter 75cm
+    title: Wasserstand Teich unter 75cm
   mode: single
 - id: '1729438559938'
   alias: USV Homeoffice Battery Test
@@ -2639,7 +2319,7 @@
   alias: Homeoffice - Anwesenheit - LIght on
   description: ''
   triggers:
-  - type: present
+  - type: occupied
     device_id: 204ac042566eeceb029902f6a2ccebc2
     entity_id: f53125dc9afff2871505bf21fcf18165
     domain: binary_sensor
@@ -2656,27 +2336,6 @@
       below: 150
   actions:
   - action: light.turn_on
-    metadata: {}
-    data: {}
-    target:
-      label_id: homeoffice_light
-  mode: single
-- id: '1731256448286'
-  alias: 'Homeoffice: Light off bei keiner Anwesenheit'
-  description: ''
-  triggers:
-  - type: not_present
-    device_id: 204ac042566eeceb029902f6a2ccebc2
-    entity_id: f53125dc9afff2871505bf21fcf18165
-    domain: binary_sensor
-    trigger: device
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 30
-  conditions: []
-  actions:
-  - action: light.turn_off
     metadata: {}
     data: {}
     target:
@@ -2768,7 +2427,12 @@
       hours: 0
       minutes: 0
       seconds: 2
-  conditions: []
+  conditions:
+  - condition: light.is_off
+    target:
+      entity_id: light.hue_tento_white_panel_1
+    options:
+      behavior: any
   actions:
   - type: turn_on
     device_id: 85d47d9016aea98c17916e9ce19b301d
@@ -2807,9 +2471,9 @@
     domain: button
     entity_id: a84dc9a5e1321a81dd748bba92178791
     type: press
-  - device_id: a617ccf23cd3b3e467b40ad057f33749
+  - device_id: 52efb5da30cf7e53efe42ded0dae5ff9
     domain: button
-    entity_id: 6e3de980a031f0cef02b84af14fe36d0
+    entity_id: 55c6cc094dd80bbadf97d0c70c37228e
     type: press
   - device_id: 784d1ddc9930d344ece42febfb17b9c3
     domain: button
@@ -2832,7 +2496,7 @@
   conditions:
   - condition: time
     after: 08:00:00
-    before: '20:00:00'
+    before: '21:00:00'
     weekday:
     - mon
     - tue
@@ -3011,7 +2675,6 @@
       notify_device:
       - f744058481d56d356770555151af1d4f
       - a519f384f321cbea3ba25ddd3b78fbd1
-      - 826634dc91493dca3edae76f43abe5c5
       remember: true
       motion_sensors:
       - binary_sensor.reolink_eingang_bewegung_2
@@ -3193,7 +2856,6 @@
     target:
       device_id:
       - cd147063c79231802222d51558d2b9ae
-      - 8d2d6152957c34948526a8c129397c4e
   mode: single
 - id: '1740072732475'
   alias: 'Eingang: Post: geleert'
@@ -3365,4 +3027,749 @@
       payload: '{{ states(''sensor.state_of_charge'') }}'
       retain: true
     action: mqtt.publish
+  mode: single
+- id: '1745761578619'
+  alias: 'Garten: Luba >99% Geladen - Nachricht'
+  description: ''
+  triggers:
+  - type: battery_level
+    device_id: da7c6ce21de05f7a8125fa31226cbdc1
+    entity_id: 6cb4500f6ad4e6ef3741734325bd0209
+    domain: sensor
+    trigger: device
+    above: 99
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+  conditions: []
+  actions:
+  - device_id: f744058481d56d356770555151af1d4f
+    domain: mobile_app
+    type: notify
+    message: Luba >99% geladen
+  mode: single
+- id: '1746859536238'
+  alias: Warmwasser Freigabe bei PV-Erzeugung über 2.5 kW
+  description: 'Aktiviert die Warmwasserbereitung über Luxtronik doppelt, wenn PV-Erzeugung
+    > 2.5 kW ist (08:30–17:00 Uhr), deaktiviert bei < 1.0 kW – jeweils mit Wiederholung.
+
+    '
+  triggers:
+  - entity_id: sensor.solarnet_power_photovoltaics
+    above: 2.5
+    trigger: numeric_state
+  - entity_id: sensor.solarnet_power_photovoltaics
+    below: 1
+    trigger: numeric_state
+  conditions:
+  - condition: time
+    after: 08:30:00
+    before: '17:00:00'
+    enabled: false
+  - condition: numeric_state
+    entity_id: sensor.energy_production_today
+    above: 20
+    enabled: false
+  actions:
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.solarnet_power_photovoltaics
+        above: 2.5
+      sequence:
+      - target:
+          entity_id: switch.luxtronik_230820_0337_domestic_water
+        action: switch.turn_on
+        data: {}
+      - delay: 00:00:03
+      - target:
+          entity_id: switch.luxtronik_230820_0337_domestic_water
+        action: switch.turn_on
+        data: {}
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.solarnet_power_photovoltaics
+        below: 1
+      - condition: numeric_state
+        entity_id: sensor.energy_production_tomorrow
+        above: 20
+      sequence:
+      - target:
+          entity_id: switch.luxtronik_230820_0337_domestic_water
+        action: switch.turn_off
+        data: {}
+      - delay: 00:00:03
+      - target:
+          entity_id: switch.luxtronik_230820_0337_domestic_water
+        action: switch.turn_off
+        data: {}
+  mode: single
+- id: '1746977497146'
+  alias: EVCC Fahrzeug automatisch wählen (Macan / Mini)
+  description: Sendet das aktuell ladende Fahrzeug an EVCC via MQTT
+  triggers:
+  - seconds: /30
+    trigger: time_pattern
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.charging_status
+        state: charging
+      - condition: state
+        entity_id: device_tracker.porscheconnect_wp1zzzxa6sl077839
+        state: home
+      sequence:
+      - data:
+          topic: homeassistant/vehicle/selected_vehicle
+          payload: macan
+          retain: true
+        action: mqtt.publish
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.cooper_se_ladestatus
+        state: 'on'
+      - condition: state
+        entity_id: device_tracker.cooper_se
+        state: home
+      sequence:
+      - data:
+          topic: homeassistant/vehicle/selected_vehicle
+          payload: cooper
+          retain: true
+        action: mqtt.publish
+  - data:
+      topic: homeassistant/vehicle/selected_vehicle
+    action: mqtt.publish
+    enabled: false
+- id: '1752398587023'
+  alias: 'Sonne: Shades Homeoffice schliessen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_front_kimbernstrasse
+    to: 'on'
+    from: 'off'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 25
+    target:
+      entity_id:
+      - cover.homeoffice_left_shutter
+      - cover.homeoffice_right_shutter
+  mode: single
+- id: '1752398671727'
+  alias: 'Sonne: Shades Homeoffice öffnen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_front_kimbernstrasse
+    to: 'off'
+    from: 'on'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 100
+    target:
+      entity_id:
+      - cover.homeoffice_left_shutter
+      - cover.homeoffice_right_shutter
+  mode: single
+- id: '1752398893939'
+  alias: 'Sonne: Shades Wohnzimmer schliessen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_front_kimbernstrasse
+    to: 'on'
+    from: 'off'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 40
+    target:
+      entity_id:
+      - cover.wohnzimmer_left_shutter
+      - cover.wohnzimmer_right_shutter
+  mode: single
+- id: '1752398948481'
+  alias: 'Sonne: Shades Wohnzimmer öffnen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_front_kimbernstrasse
+    to: 'off'
+    from: 'on'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 100
+    target:
+      entity_id:
+      - cover.wohnzimmer_left_shutter
+      - cover.wohnzimmer_right_shutter
+  mode: single
+- id: '1752399125272'
+  alias: 'Sonne: Shades Küche und Toilette schliessen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_seite_kimbernstrasse
+    to: 'on'
+    from: 'off'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 0
+    target:
+      entity_id:
+      - cover.kuche_links
+      - cover.kuche_rechts
+      - cover.toilette_eg_shutter
+  mode: single
+- id: '1752399185655'
+  alias: 'Sonne: Shades Küche und Toilette öffnen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_seite_kimbernstrasse
+    to: 'off'
+    from: 'on'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 100
+    target:
+      entity_id:
+      - cover.kuche_links
+      - cover.kuche_rechts
+      - cover.toilette_eg_shutter
+  mode: single
+- id: '1752399383183'
+  alias: 'Sonne: Shades Schlafzimmer schliessen'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - switch.sonne_ruckseite_kimbernstrasse
+    to: 'on'
+    from: 'off'
+  conditions: []
+  actions:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 0
+    target:
+      entity_id: cover.schlafzimmer_shutter
+  mode: single
+- id: '1752956345567'
+  alias: Sonnensteuerung einschalten bei >24°C
+  description: ''
+  triggers:
+  - trigger: time
+    at: 04:00:00
+  conditions: []
+  actions:
+  - if:
+    - condition: numeric_state
+      entity_id: sensor.max_temperature_heute
+      above: 24
+    then:
+    - action: automation.turn_on
+      metadata: {}
+      data: {}
+      target:
+        label_id: sonnensteuerung
+    else:
+    - action: automation.turn_off
+      metadata: {}
+      data:
+        stop_actions: true
+      target:
+        label_id: sonnensteuerung
+  mode: single
+- id: '1752957628805'
+  alias: Familie verlässt Haus
+  description: Kamera innen einschalten
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.familie_ist_zu_hause
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 8cd46a4a4a13badeb664a17c2186b3f4
+    entity_id: d3ce8a373485561773b8285b16d97323
+    domain: switch
+  mode: single
+- id: '1752994200710'
+  alias: Familie kommt nach Hause
+  description: Kamera innen ausschalten
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.familie_ist_zu_hause
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 8cd46a4a4a13badeb664a17c2186b3f4
+    entity_id: d3ce8a373485561773b8285b16d97323
+    domain: switch
+  mode: single
+- id: '1753103966055'
+  alias: Klimaanlage aus wenn Raumtemperatur Schlaftzimmer <23°
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.eight_sleep_room_temperature
+    below: 23
+  conditions:
+  - condition: numeric_state
+    entity_id: sensor.gw2000a_outdoor_temperature
+    below: 24
+  actions:
+  - data: {}
+    action: climate.turn_off
+    target:
+      device_id: aae12036b0ec43ae76f09680a724e375
+  mode: single
+- id: '1757876611042'
+  alias: 'Kochbox: Ausschalten Hauptsstrom nach 90m Kochvorgang beendet'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.80342873bdc6_grill_state
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    to: sleeping
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 3416360d1c5003d87c456a941d9a7d37
+    entity_id: 198b61c69fc678e64059195c8598a979
+    domain: switch
+  mode: single
+- id: cpu_high_80_for_1h
+  alias: CPU >80% seit 1h -> Alarm
+  description: ''
+  triggers:
+  - entity_id: sensor.processor_use
+    above: 80
+    for: 01:00:00
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - data:
+      title: Home Assistant CPU hoch
+      message: 'CPU-Auslastung seit ≥60 Min. >80 %. Aktuell: {{ states(''sensor.processor_use'')
+        }} %.'
+    action: notify.notify
+  - data:
+      title: CPU-Alarm
+      message: Die CPU-Auslastung liegt seit mindestens 60 Minuten über 80 %.
+    action: persistent_notification.create
+  mode: single
+- id: '1764349280779'
+  alias: Sauna heiss Benachrichtigung
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.bad_sensor_temperatur_sauna_temperature
+    above: 75
+  conditions: []
+  actions:
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: Sauna ist Warm
+    target:
+      floor_id: og
+  - action: notify.mobile_app_ck_16_max
+    metadata: {}
+    data:
+      message: Sauna ist warm
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: Sauna ist warm
+  mode: single
+- id: '1764493579287'
+  alias: 'Abstellraum: Kammervakuumierer nach 1h ausschalten'
+  description: ''
+  triggers:
+  - type: turned_on
+    device_id: 340104cdb198472a1f3990862d3cfe48
+    entity_id: fffbdcf1b600a370d98278f8f87e21fb
+    domain: switch
+    trigger: device
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 340104cdb198472a1f3990862d3cfe48
+    entity_id: fffbdcf1b600a370d98278f8f87e21fb
+    domain: switch
+  mode: single
+- id: '1765119598660'
+  alias: Heizung Profilwechsel
+  description: Steuert alle Thermostate basierend auf dem gewählten Heizprofil
+  triggers:
+  - entity_id: input_select.heizprofil
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_select.heizprofil
+        state: Bewohnt
+      sequence:
+      - target:
+          entity_id:
+          - climate.wohnzimmer_u_kuche_raumthermostat_bosch
+        data:
+          target_temp_low: '{{ states(''input_number.wohnzimmer_komfort'') | float
+            }}'
+          target_temp_high: '{{ states(''input_number.wohnzimmer_komfort'') | float
+            + 0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.ben_thermostat
+          - climate.paul_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.jungs_komfort'') | float }}'
+          target_temp_high: '{{ states(''input_number.jungs_komfort'') | float + 0.5
+            }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.thermostat_bad_schlafzimmer
+        data:
+          target_temp_low: '{{ states(''input_number.bad_schlafzimmer_komfort'') |
+            float }}'
+          target_temp_high: '{{ states(''input_number.bad_schlafzimmer_komfort'')
+            | float + 0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+        enabled: false
+      - target:
+          entity_id:
+          - climate.flur_ug1_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.flur_komfort'') | float }}'
+          target_temp_high: '{{ states(''input_number.flur_komfort'') | float + 0.5
+            }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.media_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.media_komfort'') | float }}'
+          target_temp_high: '{{ states(''input_number.media_komfort'') | float + 0.5
+            }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.atelier_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.atelier_komfort'') | float }}'
+          target_temp_high: '{{ states(''input_number.atelier_komfort'') | float +
+            0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+    - conditions:
+      - condition: state
+        entity_id: input_select.heizprofil
+        state: Mehrtägig weg
+      sequence:
+      - data:
+          target_temp_low: '{{ states(''input_number.wohnzimmer_abwsend'') | float
+            }}'
+          target_temp_high: '{{ states(''input_number.wohnzimmer_abwsend'') | float
+            + 0.5 }}'
+        action: climate.set_temperature
+        target:
+          entity_id: climate.wohnzimmer_u_kuche_raumthermostat_bosch
+      - target:
+          entity_id:
+          - climate.ben_thermostat
+          - climate.paul_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.jungs_abwesend'') | float }}'
+          target_temp_high: '{{ states(''input_number.jungs_abwesend'') | float +
+            0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.thermostat_bad_schlafzimmer
+        data:
+          target_temp_low: '{{ states(''input_number.bad_schlaftzimmer_abwesend'')
+            | float }}'
+          target_temp_high: '{{ states(''input_number.bad_schlaftzimmer_abwesend'')
+            | float + 0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+        enabled: false
+      - target:
+          entity_id:
+          - climate.flur_ug1_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.flur_abwesend'') | float }}'
+          target_temp_high: '{{ states(''input_number.flur_abwesend'') | float + 0.5
+            }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - target:
+          entity_id:
+          - climate.media_thermostat
+        data:
+          target_temp_low: '{{ states(''input_number.media_abwesend'') | float }}'
+          target_temp_high: '{{ states(''input_number.media_abwesend'') | float +
+            0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+      - data:
+          target_temp_low: '{{ states(''input_number.atelier_abwesend'') | float }}'
+          target_temp_high: '{{ states(''input_number.atelier_abwesend'') | float
+            + 0.5 }}'
+          hvac_mode: heat
+        action: climate.set_temperature
+        target:
+          entity_id: climate.atelier_thermostat
+    - conditions:
+      - condition: state
+        entity_id: input_select.heizprofil
+        state: Urlaub
+      sequence:
+      - data:
+          hvac_mode: heat
+          target_temp_high: 15
+          target_temp_low: 15
+        action: climate.set_temperature
+        target:
+          entity_id: climate.wohnzimmer_u_kuche_raumthermostat_bosch
+  mode: single
+- id: '1765119665651'
+  alias: Heizung Morgen Vorlauf Wochentags
+  description: Startet Heizung um 4 Uhr für warme Räume ab 8 Uhr (Wochentags)
+  triggers:
+  - at: 04:00:00
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_select.heizprofil
+    state: Bewohnt
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  actions:
+  - data:
+      temperature: '{{ states(''input_number.bad_komfort_temperatur'') | float }}'
+    action: climate.set_temperature
+    target:
+      entity_id:
+      - climate.wohnzimmer_u_kuche_raumthermostat_bosch
+      - climate.ben_thermostat
+      - climate.paul_thermostat
+      device_id:
+      - 7a8f627ee666aaf74e7bf71c2ef0366e
+      - b8fe7ed1cd4b1fa9b574943a002d2cd2
+      - 7bb3accb04defcbf6b50ff60c7cb076d
+      - b6eaf128149350a9d06191c74592ecd2
+  mode: single
+- id: '1765119852221'
+  alias: Heizung Morgen Vorlauf Wochenende
+  description: Startet Heizung später am Wochenende (7 Uhr für 11 Uhr)
+  triggers:
+  - at: 07:00:00
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_select.heizprofil
+    state: Bewohnt
+  - condition: time
+    weekday:
+    - sat
+    - sun
+  actions:
+  - target:
+      entity_id:
+      - climate.wohnzimmer_u_kuche_raumthermostat_bosch
+      - climate.paul_thermostat
+      - climate.ben_thermostat
+    data:
+      temperature: '{{ states(''input_number.wohnzimmer_komfort_temperatur'') | float
+        }}'
+    action: climate.set_temperature
+  mode: single
+- id: '1765119988990'
+  alias: Heizung Nachtabsenkung
+  description: Senkt Temperatur nachts um 2°C (außer Schlafzimmer)
+  triggers:
+  - at: '22:30:00'
+    trigger: time
+  conditions:
+  - condition: state
+    entity_id: input_select.heizprofil
+    state: Bewohnt
+  actions:
+  - data:
+      temperature: '{{ [states(''input_number.wohnzimmer_abwsend'') | float - 2, 18]
+        | max }}'
+    action: climate.set_temperature
+    target:
+      device_id:
+      - b6eaf128149350a9d06191c74592ecd2
+      - 7a8f627ee666aaf74e7bf71c2ef0366e
+      - b8fe7ed1cd4b1fa9b574943a002d2cd2
+      entity_id:
+      - climate.wohnzimmer_u_kuche_raumthermostat_bosch
+      - climate.paul_thermostat
+      - climate.ben_thermostat
+      - climate.nspanel_thermostat
+  mode: single
+- id: '1765120047552'
+  alias: Heizung Rückkehr Info
+  description: Benachrichtigt über langsames Aufheizen bei Rückkehr
+  triggers:
+  - entity_id: input_select.heizprofil
+    from: Mehrtägig weg
+    to: Bewohnt
+    trigger: state
+  conditions: []
+  actions:
+  - action: notify.mobile_app_ck_16_max
+    metadata: {}
+    data:
+      title: Heizung wird hochgefahren
+      message: Räume erreichen Komforttemperatur in ca. 4-6 Stunden. Fußbodenheizung
+        braucht Zeit!
+  mode: single
+- id: '1765120227228'
+  alias: Heizung Urlaub Info
+  description: Benachrichtigt beim Aktivieren des Urlaub-Modus
+  triggers:
+  - entity_id: input_select.heizprofil
+    to: Urlaub
+    trigger: state
+  conditions: []
+  actions:
+  - action: notify.mobile_app_ck_16_max
+    metadata: {}
+    data:
+      title: Urlaub-Modus aktiviert
+      message: Alle Thermostate auf 15°C. Denk daran rechtzeitig vor Rückkehr auf
+        Bewohnt zu stellen!
+  mode: single
+- &id001
+  id: '1766473426551'
+  alias: 'Heizung: Abwesenheit via Kalender'
+  description: ''
+  triggers:
+  - trigger: calendar
+    entity_id: calendar.heizung
+    event: start
+  - trigger: calendar
+    entity_id: calendar.heizung
+    event: end
+  conditions:
+  - condition: template
+    value_template: '{% set s = (trigger.calendar_event.summary | lower) %} {{ ''abwesend''
+      in s or ''urlaub'' in s }}
+
+      '
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.event == ''start'' }}'
+      sequence:
+      - action: input_select.select_option
+        data:
+          option: Mehrtägig weg
+        target:
+          entity_id: input_select.heizprofil
+      - action: notify.mobile_app_ck_16_max
+        metadata: {}
+        data:
+          message: Heizung in Schönaich auf Abwesend geschaltet
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.event == ''end'' }}'
+      sequence:
+      - action: input_select.select_option
+        data:
+          option: Bewohnt
+        target:
+          entity_id: input_select.heizprofil
+      - action: notify.mobile_app_ck_16_max
+        metadata: {}
+        data:
+          message: Heizung in Schönaich auf Bewohnt geschaltet
+  mode: queued
+- *id001
+- id: '1769338860021'
+  alias: 'Neustart: Automations'
+  description: ''
+  triggers:
+  - trigger: homeassistant
+    event: start
+  conditions: []
+  actions:
+  - action: automation.trigger
+    metadata: {}
+    target:
+      entity_id: automation.heizung_profilwechsel
+    data:
+      skip_condition: true
   mode: single

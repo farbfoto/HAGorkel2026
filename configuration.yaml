@@ -14,6 +14,13 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
+
+frontend:
+: !include_dir_merge_named themes
+
+http:
+  server_host: 0.0.0.0
+
 # InfluxDB Connect
 influxdb:
   api_version: 2
@@ -26,9 +33,44 @@ influxdb:
 
 # Recorder config
 recorder:
-  purge_keep_days: 45
+  purge_keep_days: 30
 
-# Proxmox Integration
+# Storage for Bubble Card Modules
+template:
+  - trigger:
+      - trigger: event
+        event_type: bubble_card_update_modules
+    sensor:
+      - name: "Bubble Card Modules"
+        state: "saved"
+        icon: "mdi:puzzle"
+        attributes:
+          modules: "{{ trigger.event.data.modules }}"
+          last_updated: "{{ trigger.event.data.last_updated }}"
+
+ # Tibber Preise         
+
+  - sensor:
+      - name: "tibber_prices_15m"
+        unique_id: tibber_prices_15m
+        icon: mdi:flash
+        unit_of_measurement: "€/kWh"
+        state: >
+          {{ now() }}   # Dummy state (Apex nutzt nur die attributes)
+        attributes:
+          datetimes: >
+            {% set today = state_attr('sensor.tibber_price_raw','today') %}
+            {% set tomorrow = state_attr('sensor.tibber_price_raw','tomorrow') %}
+            {% set all = today + tomorrow %}
+            {{ all | map(attribute='startsAt') | list }}
+          prices: >
+            {% set today = state_attr('sensor.tibber_price_raw','today') %}
+            {% set tomorrow = state_attr('sensor.tibber_price_raw','tomorrow') %}
+            {% set all = today + tomorrow %}
+            {{ all | map(attribute='total') | list }}        
+                  
+  # Proxmox Integration
+
 proxmoxve:
   - host: 192.168.1.8
     username: hass@pve
@@ -42,6 +84,9 @@ proxmoxve:
           - 102
           - 103
           - 104
+          - 105
+        vms:
+          - 101
 
 # Text to speech
 tts:
@@ -146,8 +191,75 @@ sensor:
       - lan
       - firmware
 
+  ## TiIBBER PRICING
+  # TIBBER
+
+  - platform: rest
+    name: tibber_price_raw
+    resource: https://api.tibber.com/v1-beta/gql
+    method: POST
+    headers:
+      Authorization: !secret tibber_token
+      Content-Type: application/json
+      User-Agent: REST
+    payload: >
+      {
+        "query": "{
+          viewer {
+            homes {
+              currentSubscription {
+                priceInfo {
+                  today {
+                    total
+                    energy
+                    tax
+                    startsAt
+                  }
+                  tomorrow {
+                    total
+                    energy
+                    tax
+                    startsAt
+                  }
+                }
+              }
+            }
+          }
+        }"
+      }    
+    value_template: "{{ value_json.viewer.homes[0].currentSubscription.priceInfo.today[0].total }}"    
+    # payload: '{ "query": "{ viewer { homes { currentSubscription { status priceInfo { current { total } today { total } tomorrow { total } } } } } }" }'
+    # json_attributes_path: "$.data.viewer.homes[0].currentSubscription.priceInfo"
+    json_attributes_path: "viewer.homes[0].currentSubscription.priceInfo"
+    json_attributes:
+      - today
+      - tomorrow
+    value_template: "{{ value_json.data.viewer.homes[0].currentSubscription.priceInfo.current.total | float }}"
+    scan_interval: 900 # Update every 15m
+
   - platform: template
     sensors:
+      electricity_price_max_gorkel:
+        friendly_name: Electricity Max price Gorkel
+        unique_id: sensor.electricity_max_price_gorkel
+        value_template: "{{ state_attr('sensor.gorkel_electricity_price','max_price') }}"
+        unit_of_measurement: EUR/kWh
+        icon_template: mdi:currency-eur
+
+      electricity_price_min_gorkel:
+        friendly_name: Electricity Min price Gorkel
+        unique_id: sensor.electricity_min_price_gorkel
+        value_template: "{{ state_attr('sensor.gorkel_electricity_price','min_price') }}"
+        unit_of_measurement: EUR/kWh
+        icon_template: mdi:currency-eur
+
+      electricity_price_avg_gorkel:
+        friendly_name: Electricity Avg price Gorkel
+        value_template: "{{ state_attr('sensor.gorkel_electricity_price','avg_price') }}"
+        unit_of_measurement: EUR/kWh
+        icon_template: mdi:currency-eur
+
+      # UNIFI
       unifi_gateway_cpu:
         friendly_name: "CPU"
         value_template: "{{ states.sensor.unifi_gateway_wan.attributes['gw_system-stats']['cpu'] }}"
@@ -216,7 +328,8 @@ sensor:
         availability_template: '{{ states("sensor.epex_spot_data_net_price") != "unavailable" }}'
         value_template: '{{ ((states("sensor.epex_spot_data_net_price") | float * 0.001) + 0.015) * 1.2}}'
 
-# Utility meter
+        # Utility meter
+
 utility_meter:
   gesamt_leistung_kwd:
     source: sensor.gesamt_leistung_kwh
@@ -342,78 +455,94 @@ binary_sensor:
     name: runwater-random
 
 # Template sensors
+
+# Template sensors
+
+# Storage for Bubble Card Modules
 template:
+  - trigger:
+      - trigger: event
+        event_type: bubble_card_update_modules
+    sensor:
+      - name: "Bubble Card Modules"
+        state: "saved"
+        icon: "mdi:puzzle"
+        attributes:
+          modules: "{{ trigger.event.data.modules }}"
+          last_updated: "{{ trigger.event.data.last_updated }}"
+                  
+
   - sensor:
+      # Tibber current price now
+      - name: "Tibber Price Now"
+        state: >
+          {% set now = now().isoformat() %}
+          {% set prices = state_attr('sensor.tibber_daily_prices', 'today') %}
+          {% if prices is iterable %}
+            {% for p in prices %}
+              {% if p.startsAt <= now <= (p.startsAt | as_datetime + timedelta(hours=1)) %}
+                {{ p.total }}
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            unavailable
+          {% endif %}
+        unit_of_measurement: "ct/kWh"
+
+      # Zählerstand (fallback to legacy if needed)
       - name: "Zählerstand"
         unit_of_measurement: kWh
         state_class: total_increasing
         device_class: energy
         state: >
-          {% if states('sensor.energyesp32_mt681_zahlerstand_total') == 'unavailable' or states('sensor.energyesp32_mt681_zahlerstand_total') < '1' %}
+          {% set val = states('sensor.energyesp32_mt681_zahlerstand_total') %}
+          {% if val == 'unavailable' or val | float(0) < 1 %}
             {{ states('sensor.zahlerstand') }}
           {% else %}
-            {{ states('sensor.energyesp32_mt681_zahlerstand_total') }}
+            {{ val }}
           {% endif %}
+
+      # Einspeisung (same logic)
       - name: "Einspeisung"
         unit_of_measurement: kWh
         state_class: total_increasing
         device_class: energy
         state: >
-          {% if states('sensor.energyesp32_mt681_einspeisung') == 'unavailable' or states('sensor.energyesp32_mt681_einspeisung') < '1' %}
+          {% set val = states('sensor.energyesp32_mt681_einspeisung') %}
+          {% if val == 'unavailable' or val | float(0) < 1 %}
             {{ states('sensor.einspeisung') }}
           {% else %}
-            {{ states('sensor.energyesp32_mt681_einspeisung') }}
+            {{ val }}
           {% endif %}
+
+      # Battery Power Charging (invert sign)
       - name: "Battery Power Charging"
         unit_of_measurement: kW
         device_class: power
         state: "{{ max(0, 0 - states('sensor.solarnet_power_battery') | float(default=0)) }}"
+
+      # Battery Power Discharging
       - name: "Battery Power Discharging"
         unit_of_measurement: kW
         device_class: power
         state: "{{ max(0, states('sensor.solarnet_power_battery') | float(default=0)) }}"
+
+      # Power from Photovoltaics
       - name: "Power Photovoltaics"
         unit_of_measurement: kW
         device_class: power
         state: "{{ states('sensor.solarnet_power_photovoltaics') | float(default=0) }}"
 
+  # Trigger-based template: rain last hour
   - trigger:
       platform: time_pattern
       minutes: "0"
     sensor:
       - name: "Rain last hour"
-        state: "{{ states('sensor.gw2000a_hourly_rain_rate_piezo')}}"
+        state: "{{ states('sensor.gw2000a_hourly_rain_rate_piezo') }}"
         unit_of_measurement: "mm"
         attributes:
           updated_at: "{{ now() }}"
-
-  # - sensor:
-  #     - name: "Offene Fenster und Türen"
-  #       state: >
-  #         {% set offene_sensoren = states.binary_sensor | selectattr('state', 'eq', 'on')
-  #         | selectattr('attributes.device_class', 'in', ['window', 'door'])
-  #         | map(attribute='name') | list %}
-  #         {{ offene_sensoren | join(', ') if offene_sensoren else 'Alle geschlossen' }}
-
-# Frontend
-frontend:
-  themes: !include_dir_merge_named themes
-  extra_module_url:
-    - /local/card-mod.js
-
-# Number template
-number:
-  - platform: template
-    name: "$devicename brightness"
-    min_value: 0
-    max_value: 255
-    step: 1
-    lambda: |-
-      return id(rgb8x32)->get_brightness();
-    set_action:
-      lambda: |-
-        id(rgb8x32)->set_brightness(x);
-
 # Camera Platform
 # camera:
 #   # - platform: xiaomi_cloud_map_extractor
@@ -462,7 +591,7 @@ number:
 #     sensors:
 #       # - name: Battery SoC
 #       #   unit_of_measurement: "%"
-#       #   slave: 200 # > hier muss die Slave Nummer mit der Einstellungd es WR übereinstimmen (Zähleradresse)
+#       #   slave: 200 # > hier muss die Slave Nummer mit der Einstellungd es WR übereinstimmen (Zähler/)
 #       #   address: 36867
 #       #   input_type: holding
 #       #   data_type: uint32

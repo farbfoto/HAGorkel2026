@@ -35,13 +35,6 @@ play_brain_food:
   mode: single
   alias: Play Concentration Music
   icon: mdi:music
-audio_pause_roon:
-  sequence:
-  - service: media_player.media_pause
-    target:
-      entity_id: media_player.office_hifiberry
-  mode: single
-  alias: audio_pause_roon_hifiberry
 play_concentration_jazz:
   alias: Play Concentration Jazz
   sequence:
@@ -83,25 +76,15 @@ play_concentration_in_the_loop:
   mode: single
   icon: mdi:music
 play_80s:
-  alias: Play 80s
+  alias: Play Chill Playlist
   sequence:
-  - data:
+  - target:
+      entity_id: media_player.nad_c700_nad_bluesound
+    data:
+      media_content_id: tidal://playlist/b54f6cf2-96f7-4eaf-8c4c-15ad38d365f9
       media_content_type: music
-      media_content_id: Playlists/The 80s
     action: media_player.play_media
-    target:
-      device_id: 1114dade8e13e06556e37d1f1db30b1c
-  - data:
-      shuffle: true
-    action: media_player.shuffle_set
-    target:
-      device_id: 1114dade8e13e06556e37d1f1db30b1c
-  - action: media_player.media_next_track
-    data: {}
-    target:
-      device_id: 1114dade8e13e06556e37d1f1db30b1c
   mode: single
-  icon: mdi:music
 play_slow_roast:
   alias: Play Slow Roast
   sequence:
@@ -160,46 +143,6 @@ play_myjazz:
     action: media_player.media_next_track
     target:
       device_id: 1114dade8e13e06556e37d1f1db30b1c
-  mode: single
-  icon: mdi:music
-play_concentration_decaf:
-  alias: Play Concentration Decaf
-  sequence:
-  - service: media_player.play_media
-    target:
-      entity_id: media_player.office_hifiberry
-    data:
-      media_content_type: music
-      media_content_id: Playlists/Decaf
-  - service: media_player.shuffle_set
-    target:
-      entity_id: media_player.office_hifiberry
-    data:
-      shuffle: true
-  - service: media_player.media_next_track
-    target:
-      entity_id: media_player.office_hifiberry
-    data: {}
-  mode: single
-  icon: mdi:music
-play_concentration_my_mix_2:
-  alias: Play Concentration My Mix 2
-  sequence:
-  - service: media_player.play_media
-    target:
-      entity_id: media_player.office_hifiberry
-    data:
-      media_content_type: music
-      media_content_id: TIDAL/PLAYLIStS/Frühlingserwachen
-  - service: media_player.shuffle_set
-    target:
-      entity_id: media_player.office_hifiberry
-    data:
-      shuffle: true
-  - service: media_player.media_next_track
-    target:
-      entity_id: media_player.office_hifiberry
-    data: {}
   mode: single
   icon: mdi:music
 play_autopilot:
@@ -303,13 +246,12 @@ blink_blinki:
 homeoffice_swr3_spielen:
   alias: 'Homeoffice: SWR3 spielen'
   sequence:
-  - service: media_player.play_media
-    target:
-      entity_id:
-      - media_player.nad_c700
-    data:
-      media_content_id: https://tunein.com/radio/SWR3-933-s57728/
+  - data:
+      media_content_id: http://tunein.com/radio/SWR3-933-s57728/
       media_content_type: music
+    action: media_player.play_media
+    target:
+      device_id: 1114dade8e13e06556e37d1f1db30b1c
   mode: single
 homeoffice_roon_play_swr3:
   alias: 'Homeoffice: Roon: Play SWR3'
@@ -329,18 +271,6 @@ homeoffice_roon_play_swr3:
     action: media_player.media_next_track
     target:
       device_id: 1114dade8e13e06556e37d1f1db30b1c
-  mode: single
-  icon: mdi:music
-'1702734512584':
-  alias: 'Homeoffice: Roon: Play My Mix 1'
-  sequence:
-  - service: media_player.media_play
-    target:
-      entity_id:
-      - media_player.airplay_c700
-      device_id: []
-      area_id: []
-    data: {}
   mode: single
   icon: mdi:music
 rasen_oben_wasser_an:
@@ -595,32 +525,27 @@ wohnzimmer_music_indirect:
   description: ''
   icon: mdi:account-music-outline
 roborock_clean_office:
+  alias: Homeoffice reinigen
   sequence:
-  - action: vacuum.send_command
-    target:
-      entity_id: vacuum.roborock_s8_pro_ultra
-    data:
-      command: app_segment_clean
-      params:
-      - segments:
-        - 19
-        repeat: 2
-  alias: 'Roborock: Clean Office'
-  description: ''
+  - data:
+      entity_id: vacuum.l40s_pro_ultra
+      segment:
+      - 8
+    action: dreame_vacuum.vacuum_clean_segment
+  - delay:
+      seconds: 1
+  - target:
+      entity_id: vacuum.l40s_pro_ultra
+    action: vacuum.vacuum_start
+  icon: mdi:robot-vacuum
 roborock_clean_wohnen:
   sequence:
-  - action: vacuum.send_command
+  - action: dreame_vacuum.vacuum_clean_segment
     target:
-      entity_id: vacuum.roborock_s8_pro_ultra
+      device_id: a313cd0bb8e17c9cf1dcedee9b3a5c94
     data:
-      command: app_segment_clean
-      params:
-      - segments:
-        - 17
-        - 18
-        - 16
-        repeat: 2
-  alias: 'Roborock: Clean Wohnen'
+      segments: 8
+  alias: 'Dreame: Clean Homeoffice'
   description: ''
 schlafzimmer_bett_licht_zeitabhangig:
   sequence:
@@ -646,4 +571,205 @@ schlafzimmer_bett_licht_zeitabhangig:
         domain: light
         brightness_pct: 65
   alias: 'Schlafzimmer: Bett: Licht-Zeitabhängig'
+  description: ''
+beschattung_wohnzimmer:
+  sequence:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 50
+    target:
+      entity_id:
+      - cover.wohnzimmer_left_shutter
+      - cover.wohnzimmer_right_shutter
+  alias: Beschattung Wohnzimmer
+  description: ''
+beschattung_wohnzimmer_offnen:
+  sequence:
+  - action: cover.set_cover_position
+    metadata: {}
+    data:
+      position: 100
+    target:
+      entity_id:
+      - cover.wohnzimmer_left_shutter
+      - cover.wohnzimmer_right_shutter
+  alias: Beschattung Wohnzimmer öffnen
+  description: ''
+gute_nacht:
+  sequence:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      floor_id: og
+      area_id: garten
+  - type: turn_off
+    device_id: 1c6ced35933e2f30c4bc5044eed49ff7
+    entity_id: f443be0a0ae51a4416d5ef85d3259b63
+    domain: remote
+  - action: script.klima_nach_60m_aus
+    metadata: {}
+    data: {}
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_door_innen_privatsphare_modus
+  alias: Gute Nacht
+  description: ''
+klima_nach_60m_aus:
+  sequence:
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
+  - action: climate.set_hvac_mode
+    metadata: {}
+    data:
+      hvac_mode: 'off'
+    target:
+      device_id: aae12036b0ec43ae76f09680a724e375
+  alias: Klima nach 60m aus
+  description: ''
+dreame_clean_living_area:
+  sequence:
+  - action: dreame_vacuum.vacuum_clean_segment
+    target:
+      device_id: a313cd0bb8e17c9cf1dcedee9b3a5c94
+    data:
+      segments:
+      - '7'
+      - '3'
+      - '6'
+      - '5'
+  alias: 'Dreame: Clean Living area'
+  description: ''
+notify_all_v2:
+  sequence:
+  - variables:
+      push_data: "{% if critical %} {\n  \"push\": {\n    \"sound\": {\n     \"name\":
+        \"default\",\n     \"critical\": 1,\n      \"volume\": 1.0\n     }\n  }\n}
+        {% else %} {} {% endif %}"
+    alias: push_data Variable, um den Channel "Critical" beim Iphone zu abonnieren
+  - variables:
+      targets: "{% set t = [] %} \n{% if group_admins %}\n  {% set t = t + [\"notify.mobile_app_ck15_pro\",
+        \"notify.mobile_app_iphone\"] %}\n{% endif %} \n{% if group_family %}\n  {%
+        set t = t + [\"notify.mobile_app_ck15_pro\", \"notify.mobile_app_iphone\",
+        \"notify.mobile_app_iphone_14_isa\", \"notify.mobile_app_bens_iphone\"] %}\n{%
+        endif %} \n{% if alexa %}\n  {% set t = t + [\"notify.office_echo_show_sprechen\"]
+        %}\n{% endif %} \n{{ t | unique | list }}"
+    alias: targets für alle gewünschten "notify" Dienste
+  - variables:
+      alexa_devices: '{{ targets | select(''search'', ''notify.alexa_media'') | list
+        }}'
+    alias: 'alexa_devices : Filter um nur die alexa Devices für den Dienst zu filtern'
+  - variables:
+      media_players: '{% set media_players = alexa_devices | map(''replace'', ''notify.alexa_media_'',
+        ''media_player.'') | list %} {{ media_players }}
+
+        '
+    alias: 'media_players: Aus dem Dienst werden automatisch alle Media_Player Entitätsnamen
+      abgeleitet.'
+  - variables:
+      volume_level: "{% if critical %}\n  0.8\n{% else %}\n  0.2\n{% endif %}\n"
+    alias: 'volume_level: Wenn critical aktiviert ist, wir eine andere Lautstärke
+      gewählt , anonsten default für die Ausgabe'
+  - repeat:
+      for_each: '{{ media_players }}'
+      sequence:
+      - action: media_player.volume_set
+        metadata: {}
+        data:
+          volume_level: '{{ volume_level }}'
+        target:
+          entity_id: '{{ repeat.item }}'
+    enabled: true
+  - repeat:
+      sequence:
+      - action: '{{ repeat.item }}'
+        data:
+          title: '{{ title }}'
+          message: '{{ message }}'
+          data: '{{ push_data }}'
+      for_each: '{{ targets }}'
+    enabled: true
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - repeat:
+      for_each: '{{ media_players }}'
+      sequence:
+      - action: media_player.volume_set
+        metadata: {}
+        data:
+          volume_level: 0.1
+        target:
+          entity_id: '{{ repeat.item }}'
+    enabled: true
+  - action: persistent_notification.create
+    metadata: {}
+    data:
+      message: '{{ targets }}'
+  alias: Notify All V2
+  description: ''
+  fields:
+    message:
+      selector:
+        text:
+          multiline: true
+      name: message
+    title:
+      selector:
+        text:
+      name: title
+    group_admins:
+      selector:
+        boolean: {}
+      name: group_admins
+      required: true
+    group_family:
+      selector:
+        boolean: {}
+      name: group_family
+      required: true
+    critical:
+      selector:
+        boolean: {}
+      name: critical
+      required: true
+    alexa:
+      selector:
+        boolean: {}
+      name: alexa
+      required: true
+guten_morgen:
+  sequence:
+  - type: turn_on
+    device_id: 28a353b0dc7f55548d8f10496daab454
+    entity_id: 497c719329607906ae2fc8d000d65ed9
+    domain: switch
+  - action: media_player.play_media
+    metadata: {}
+    data:
+      media_content_id: P1
+      media_content_type: preset
+    target:
+      device_id: 1114dade8e13e06556e37d1f1db30b1c
+    enabled: false
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_door_innen_privatsphare_modus
+  - action: media_player.select_source
+    metadata: {}
+    data:
+      source: SWR3
+    target:
+      device_id: 1114dade8e13e06556e37d1f1db30b1c
+  alias: Guten Morgen
   description: ''
