@@ -8,6 +8,7 @@ familiy:
 
 vacation_lights:
   name: Vacation Lights
+  entities:
     - light.eckleuchte
     - light.eingang
     - light.klavier
@@ -16,4 +17,3 @@ vacation_lights:
     - light.tisch_rechts
     - light.toilette_eg_gu10
     - light.hue_beyond_up_1
-
