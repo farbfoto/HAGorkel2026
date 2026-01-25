@@ -30,7 +30,7 @@ influxdb:
   host: 192.168.1.16
   ssl: false
   port: 8086
-  token: CPfOaQ89jO57OmvYL6RXZFeZMIBlhiKEwAvOpmlVwQg9TRSBOPa3mEBIEZfnqQGlg2rz1Sha1A_BTcnHB3dmpQ==
+  token: !secret influx_token
   organization: Gorkel
   bucket: home_assistant
 
@@ -76,8 +76,8 @@ template:
 
 proxmoxve:
   - host: 192.168.1.8
-    username: hass@pve
-    password: 1694518dekjhgksjh
+    username: !secret proxmox_user
+    password: !secret proxmox_pw
     verify_ssl: false
     realm: pve
     nodes:
@@ -183,11 +183,11 @@ sensor:
     round: 2
 
   - platform: unifigateway
-    host: 192.168.1.1
+    host: 
     version: UDMP-unifiOS
     verify_ssl: false
-    username: unifiha
-    password: HomeautoPica555o
+    username: !secrets unifi_user
+    password: !secrets unifi_pw
     monitored_conditions:
       - www
       - wlan
@@ -351,17 +351,17 @@ utility_meter:
     name: Gesamt Leistung kwd
 
 # ZHA Zigbee
-zha:
-  zigpy_config:
-    ota:
-      otau_directory: /config/zigpy_ota
-      extra_ikea_provider: true
-      extra_ledvance_provider: true
-      salus_provider: true
-      inovelli_provider: true
-      thirdreality_provider: true
-    ezsp_policies:
-      TRUST_CENTER_POLICY: 0x0002 # ALLOW_UNSECURED_REJOINS
+# zha:
+#   zigpy_config:
+#     ota:
+#       otau_directory: /config/zigpy_ota
+#       extra_ikea_provider: true
+#       extra_ledvance_provider: true
+#       salus_provider: true
+#       inovelli_provider: true
+#       thirdreality_provider: true
+#     ezsp_policies:
+#       TRUST_CENTER_POLICY: 0x0002 # ALLOW_UNSECURED_REJOINS
 
 # Logger
 logger:
@@ -461,7 +461,7 @@ knx:
 
 # IFTTT
 ifttt:
-  key: bl0GPx_6n-05LUN-_dqvoy
+  key: !secrets ifttt_key
 
 # Binary sensor
 binary_sensor:
